@@ -2,29 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── PIXEL ART DESIGN SYSTEM ─────────────────────────────────────── */
+/* ── MARIO PIXEL ART DESIGN SYSTEM ──────────────────────────────── */
 :root {
-  --px-bg:    #0a0a1a;
-  --px-bg2:   #13132a;
-  --px-bg3:   #1c1c3e;
-  --px-border:#2a2a4a;
-  --px-text:  #e0e0ff;
-  --px-dim:   #5a5a8a;
+  /* Fond Mario */
+  --sky:       #5C94FC;
+  --ground:    #5AC54F;
+  --ground-dk: #2D7B23;
 
-  /* Pro space — bleu / violet */
-  --pro:       #4a7cff;
-  --pro-dark:  #1a2860;
-  --pro-alt:   #7c3aed;
+  /* Header */
+  --header-bg: #1220B0;
 
-  /* Perso space — vert / orange */
-  --perso:      #20c060;
-  --perso-dark: #0a3020;
-  --perso-alt:  #ff7020;
+  /* Cards */
+  --card-bg:   #ffffff;
 
-  /* Statuts */
-  --gold:  #ffd700;
-  --red:   #ff4040;
-  --ok:    #20ff80;
+  /* Texte */
+  --ink:       #1a1a2e;
+  --ink-2:     #4a4a6e;
+  --dim:       #9090b0;
+
+  /* Sections */
+  --today:      #F8D000;
+  --today-dk:   #A86000;
+  --history:    #FC5252;
+  --history-dk: #C00000;
+  --dash:       #5AC54F;
+  --dash-dk:    #2D7B23;
+  --avatar:     #B070F8;
+  --avatar-dk:  #6020A0;
+
+  /* Espaces */
+  --pro:       #3CBCFC;
+  --pro-dk:    #0074B8;
+  --perso:     #FC9838;
+  --perso-dk:  #C05000;
+
+  /* Status */
+  --green-ok: #5AC54F;
+  --red-ko:   #FC5252;
+  --gold:     #F8D000;
 }
 
 /* ── Animations ─────────────────────────────────────────────────── */
@@ -34,7 +49,7 @@
 }
 @keyframes checkPop {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.4); }
+  40%  { transform: scale(1.45); }
   100% { transform: scale(1); }
 }
 @keyframes pxStar {
@@ -43,11 +58,15 @@
 }
 @keyframes pxMilestone {
   0%,100% { transform: scale(1); filter: brightness(1); }
-  50%     { transform: scale(1.5); filter: brightness(2.5); }
+  50%     { transform: scale(1.6); filter: brightness(2.5); }
 }
 @keyframes pxBlink {
   0%,100% { opacity: 1; }
   50%     { opacity: 0; }
+}
+@keyframes pxBounce {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-6px); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -55,8 +74,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--px-bg);
-  color: var(--px-text);
+  background: var(--sky);
+  color: var(--ink);
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   line-height: 2;
@@ -64,25 +83,9 @@ body {
   image-rendering: pixelated;
 }
 
-/* Scanlines CRT */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent 0px,
-    transparent 3px,
-    rgba(0, 0, 30, 0.10) 3px,
-    rgba(0, 0, 30, 0.10) 4px
-  );
-  pointer-events: none;
-  z-index: 9999;
-}
-
 #root { min-height: 100vh; }
 
-/* ── Animations classes ──────────────────────────────────────────── */
+/* ── Animation classes ───────────────────────────────────────────── */
 .animate-fade-up {
   animation: fadeUp 0.35s ease-out forwards;
   opacity: 0;
@@ -92,53 +95,48 @@ body::after {
 .delay-3 { animation-delay: 0.19s; }
 .delay-4 { animation-delay: 0.26s; }
 
-/* ── Pixel Card ──────────────────────────────────────────────────── */
+/* ── Pixel Card (fond blanc + bordure colorée) ───────────────────── */
 .card {
-  background: var(--px-bg2);
-  border: 2px solid var(--px-border);
-  box-shadow: 4px 4px 0 #000;
+  background: var(--card-bg);
+  border: 3px solid #d0d0e0;
+  box-shadow: 4px 4px 0 #00000033;
   border-radius: 0;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--pro);
-  color: #fff;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--today);
+  color: var(--ink);
   padding: 10px 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 3px solid var(--ink);
   border-radius: 0;
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #000;
+  box-shadow: 4px 4px 0 var(--today-dk);
   transition: transform 0.06s, box-shadow 0.06s;
-  image-rendering: pixelated;
 }
 .btn-primary:active {
-  transform: translate(3px, 3px);
+  transform: translate(4px, 4px);
   box-shadow: none;
 }
 
 .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  color: var(--px-text);
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #f0f0f8;
+  color: var(--ink-2);
   padding: 10px 16px;
-  border: 2px solid var(--px-border);
+  border: 3px solid #c0c0d8;
   border-radius: 0;
   font-family: 'Press Start 2P', monospace;
   font-size: 8px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #000;
+  box-shadow: 4px 4px 0 #a0a0b8;
   transition: transform 0.06s, box-shadow 0.06s;
 }
 .btn-ghost:active {
-  transform: translate(3px, 3px);
+  transform: translate(4px, 4px);
   box-shadow: none;
 }
 
@@ -148,8 +146,7 @@ body::after {
 /* ── Pixel star particles ────────────────────────────────────────── */
 .px-star {
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 6px; height: 6px;
   pointer-events: none;
   image-rendering: pixelated;
   animation: pxStar 0.4s ease-out forwards;
@@ -158,6 +155,5 @@ body::after {
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--px-bg); }
-::-webkit-scrollbar-thumb { background: var(--px-border); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--pro); }
+::-webkit-scrollbar-track { background: #d0e8ff; }
+::-webkit-scrollbar-thumb { background: var(--header-bg); border-radius: 0; }

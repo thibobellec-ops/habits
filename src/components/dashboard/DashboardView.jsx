@@ -1,39 +1,42 @@
 import { useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { fmt, getDays, calcStreak, accentColor, accentSecondary } from '../../lib/stats';
+import { fmt, getDays, calcStreak, sectionColor, sectionDark } from '../../lib/stats';
 
-function heatColor(rate, accent) {
-  if (rate === null) return '#0d0d1a';
-  if (rate === 0)    return '#13132a';
-  if (rate < 0.33)   return `${accent}44`;
-  if (rate < 0.66)   return `${accent}88`;
-  if (rate < 1)      return `${accent}cc`;
-  return accent;
+const SEC    = sectionColor('dashboard');  // #5AC54F
+const SEC_DK = sectionDark('dashboard');   // #2D7B23
+
+function heatColor(rate) {
+  if (rate === null) return '#e8f8e8';
+  if (rate === 0)    return '#f0f8f0';
+  if (rate < 0.33)  return `${SEC}44`;
+  if (rate < 0.66)  return `${SEC}88`;
+  if (rate < 1)     return `${SEC}cc`;
+  return SEC;
 }
 
 const STREAK_MILESTONES = [7, 14, 30, 100];
 
-function StreakBarMini({ streak, accent }) {
+function StreakBarMini({ streak }) {
   const max = Math.max(100, streak + 10);
   const pct = Math.min((streak / max) * 100, 100);
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a' }}>STREAK</span>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: accent }}>{streak}J</span>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#4a4a6e' }}>STREAK</span>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: SEC }}>{streak}J</span>
       </div>
-      <div style={{ position: 'relative', height: 18, background: '#0a0a1a', border: `2px solid ${accent}`, boxShadow: '3px 3px 0 #000' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: accent, transition: 'width 0.5s steps(20)' }} />
+      <div style={{ position: 'relative', height: 18, background: '#f0f8f0', border: `2px solid ${SEC}`, boxShadow: `3px 3px 0 ${SEC_DK}` }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: SEC, transition: 'width 0.5s steps(20)' }} />
         {STREAK_MILESTONES.filter(m => m <= max).map(m => (
           <div key={m} style={{
             position: 'absolute', left: `${(m / max) * 100}%`, top: -2, bottom: -2,
-            width: 3, background: streak >= m ? '#ffd700' : '#2a2a4a', zIndex: 2,
+            width: 3, background: streak >= m ? '#F8D000' : '#d0d0e0', zIndex: 2,
           }} />
         ))}
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#fff', textShadow: '1px 1px 0 #000', zIndex: 3,
+          fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#fff', textShadow: '1px 1px 0 #0004', zIndex: 3,
         }}>
           {streak} JOURS
         </div>
@@ -43,7 +46,7 @@ function StreakBarMini({ streak, accent }) {
           <span key={m} style={{
             position: 'absolute', left: `${(m / max) * 100}%`, transform: 'translateX(-50%)',
             fontFamily: "'Press Start 2P',monospace", fontSize: 5,
-            color: streak >= m ? '#ffd700' : '#2a2a4a',
+            color: streak >= m ? '#F8D000' : '#c0c0d8',
             animation: streak === m ? 'pxMilestone 0.8s ease-out' : 'none',
           }}>{m}J</span>
         ))}
@@ -52,35 +55,33 @@ function StreakBarMini({ streak, accent }) {
   );
 }
 
-function KPI({ label, value, suffix, accent }) {
+function KPI({ label, value, suffix }) {
   return (
     <div style={{
       padding: '14px 12px', flex: '1 1 100px', minWidth: 0,
-      background: '#13132a', border: `2px solid #2a2a4a`, boxShadow: '3px 3px 0 #000',
+      background: '#ffffff', border: `3px solid ${SEC}`, boxShadow: `3px 3px 0 ${SEC_DK}`,
     }}>
-      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, letterSpacing: '0.08em', color: '#5a5a8a', marginBottom: 8 }}>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, letterSpacing: '0.08em', color: '#9090b0', marginBottom: 8 }}>
         {label}
       </p>
-      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 18, color: accent, lineHeight: 1 }}>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 18, color: '#1a1a2e', lineHeight: 1 }}>
         {value}
-        {suffix && <span style={{ fontSize: 10, color: '#3a3a6a' }}>{suffix}</span>}
+        {suffix && <span style={{ fontSize: 10, color: SEC }}>{suffix}</span>}
       </p>
     </div>
   );
 }
 
-const CustomTip = ({ active, payload, label, accent }) =>
+const CustomTip = ({ active, payload, label }) =>
   active && payload?.length ? (
-    <div style={{ background: '#13132a', border: `2px solid #2a2a4a`, boxShadow: '3px 3px 0 #000', padding: '8px 12px' }}>
-      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#5a5a8a', marginBottom: 4 }}>{label}</p>
-      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: accent }}>{payload[0].value}%</p>
+    <div style={{ background: '#fff', border: `2px solid ${SEC}`, boxShadow: `3px 3px 0 ${SEC_DK}`, padding: '8px 12px' }}>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0', marginBottom: 4 }}>{label}</p>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: SEC }}>{payload[0].value}%</p>
     </div>
   ) : null;
 
 export default function DashboardView({ space }) {
   const { store }  = useApp();
-  const accent     = accentColor(space);
-  const secondary  = accentSecondary(space);
   const habits     = store.habits[space].filter(h => !h.archived);
   const ids        = habits.map(h => h.id);
   const { checkins } = store;
@@ -93,7 +94,6 @@ export default function DashboardView({ space }) {
   }
 
   const todayDone = ids.filter(id => checkins[todayKey]?.[space]?.[id]).length;
-  const todayRate = rate(todayKey);
   const streak    = useMemo(() => calcStreak(checkins, space, ids), [checkins, space, ids]);
 
   const last7  = getDays(7);
@@ -145,33 +145,33 @@ export default function DashboardView({ space }) {
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 16px' }}>
 
       <div className="animate-fade-up delay-1" style={{ marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: accent, letterSpacing: '0.1em', marginBottom: 8 }}>▶ STATISTIQUES</p>
-        <h1 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: '#e0e0ff' }}>DASHBOARD</h1>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: SEC, letterSpacing: '0.1em', marginBottom: 8 }}>▶ STATISTIQUES</p>
+        <h1 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: '#1a1a2e' }}>DASHBOARD</h1>
       </div>
 
       {/* KPIs */}
       <div className="animate-fade-up delay-1" style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-        <KPI label="TODAY"   value={`${todayDone}/${habits.length}`} accent={accent} />
-        <KPI label="7J"      value={rate7}  suffix="%" accent={accent} />
-        <KPI label="30J"     value={rate30} suffix="%" accent={accent} />
+        <KPI label="TODAY"   value={`${todayDone}/${habits.length}`} />
+        <KPI label="7J"      value={rate7}  suffix="%" />
+        <KPI label="30J"     value={rate30} suffix="%" />
       </div>
 
       {/* Streak bar */}
       <div className="animate-fade-up delay-2" style={{
         padding: '18px 20px', marginBottom: 14,
-        background: '#13132a', border: `2px solid ${accent}`, boxShadow: '4px 4px 0 #000',
+        background: '#ffffff', border: `3px solid ${SEC}`, boxShadow: `4px 4px 0 ${SEC_DK}`,
       }}>
-        <StreakBarMini streak={streak} accent={accent} />
-        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+        <StreakBarMini streak={streak} />
+        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 8 }}>
           {[{ l: '1SEM', d: 7 }, { l: '2SEM', d: 14 }, { l: '1MOIS', d: 30 }, { l: '100J', d: 100 }].map(({ l, d }) => (
             <div key={d} style={{ textAlign: 'center' }}>
               <div style={{
                 width: 24, height: 24, margin: '0 auto 4px',
-                border: `2px solid ${streak >= d ? '#ffd700' : '#2a2a4a'}`,
-                background: streak >= d ? 'rgba(255,215,0,0.1)' : 'transparent',
+                border: `2px solid ${streak >= d ? '#F8D000' : '#d0d0e0'}`,
+                background: streak >= d ? 'rgba(248,208,0,0.12)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
               }}>{streak >= d ? '★' : '☆'}</div>
-              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: streak >= d ? '#ffd700' : '#2a2a4a' }}>{l}</p>
+              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: streak >= d ? '#F8D000' : '#c0c0d8' }}>{l}</p>
             </div>
           ))}
         </div>
@@ -179,28 +179,28 @@ export default function DashboardView({ space }) {
 
       {/* Chart 30j */}
       <div className="card animate-fade-up delay-2" style={{ padding: '18px 14px 12px', marginBottom: 12 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a', marginBottom: 14 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#9090b0', marginBottom: 14 }}>
           EVOLUTION — 30J
         </p>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={chartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="2 4" stroke="#1a1a3a" />
-            <XAxis dataKey="date" tick={{ fill: '#3a3a6a', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} interval={4} />
-            <YAxis domain={[0, 100]} tick={{ fill: '#3a3a6a', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} tickFormatter={v => `${v}%`} />
-            <Tooltip content={<CustomTip accent={accent} />} />
-            <Line type="stepAfter" dataKey="taux" stroke={accent} strokeWidth={2} dot={false} activeDot={{ r: 3, fill: accent, strokeWidth: 0 }} connectNulls />
+            <CartesianGrid strokeDasharray="2 4" stroke="#e8f0e8" />
+            <XAxis dataKey="date" tick={{ fill: '#9090b0', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} interval={4} />
+            <YAxis domain={[0, 100]} tick={{ fill: '#9090b0', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} tickFormatter={v => `${v}%`} />
+            <Tooltip content={<CustomTip />} />
+            <Line type="stepAfter" dataKey="taux" stroke={SEC} strokeWidth={2} dot={false} activeDot={{ r: 3, fill: SEC, strokeWidth: 0 }} connectNulls />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Heatmap 90j */}
       <div className="card animate-fade-up delay-3" style={{ padding: '18px 16px', marginBottom: 12 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a', marginBottom: 14 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#9090b0', marginBottom: 14 }}>
           HEATMAP — 90J
         </p>
         {months.map(({ label, days: mDays }) => (
           <div key={label} style={{ marginBottom: 12 }}>
-            <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a', marginBottom: 6, letterSpacing: '0.06em' }}>
+            <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e', marginBottom: 6, letterSpacing: '0.06em' }}>
               {label.toUpperCase()}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
@@ -213,8 +213,8 @@ export default function DashboardView({ space }) {
                     title={`${d.toLocaleDateString('fr-FR')} — ${r !== null ? Math.round(r * 100) + '%' : '—'}`}
                     style={{
                       width: 14, height: 14,
-                      background: heatColor(r, accent),
-                      border: key === todayKey ? `2px solid ${accent}` : '1px solid #0a0a1a',
+                      background: heatColor(r),
+                      border: key === todayKey ? `2px solid ${SEC}` : '1px solid #e0e0e8',
                       cursor: 'default',
                       imageRendering: 'pixelated',
                     }}
@@ -229,29 +229,29 @@ export default function DashboardView({ space }) {
       {/* Top / Bottom */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginBottom: 12 }}>
         <div className="card animate-fade-up delay-3" style={{ padding: '16px' }}>
-          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#20ff80', marginBottom: 12 }}>▲ TOP</p>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: SEC, marginBottom: 12 }}>▲ TOP</p>
           {top3.length === 0
-            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
+            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
             : top3.map((h, i) => (
               <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6 }}>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i + 1}. {h.name}
                 </span>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#20ff80', flexShrink: 0 }}>{h.pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: SEC, flexShrink: 0 }}>{h.pct}%</span>
               </div>
             ))
           }
         </div>
         <div className="card animate-fade-up delay-4" style={{ padding: '16px' }}>
-          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#ff4040', marginBottom: 12 }}>▼ A AMELIORER</p>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#FC5252', marginBottom: 12 }}>▼ A AMELIORER</p>
           {bottom3.length === 0
-            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
+            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
             : bottom3.map((h, i) => (
               <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6 }}>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i + 1}. {h.name}
                 </span>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#ff4040', flexShrink: 0 }}>{h.pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#FC5252', flexShrink: 0 }}>{h.pct}%</span>
               </div>
             ))
           }
@@ -260,17 +260,17 @@ export default function DashboardView({ space }) {
 
       {/* Par catégorie */}
       <div className="card animate-fade-up delay-4" style={{ padding: '16px', marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#5a5a8a', marginBottom: 14 }}>PAR CATEGORIE — 30J</p>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0', marginBottom: 14 }}>PAR CATEGORIE — 30J</p>
         {catStats.length === 0
-          ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
+          ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
           : catStats.map(({ category, pct }) => (
             <div key={category} style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0' }}>{category.toUpperCase()}</span>
-                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: accent }}>{pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e' }}>{category.toUpperCase()}</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: SEC }}>{pct}%</span>
               </div>
-              <div style={{ height: 8, background: '#0a0a1a', border: `1px solid #2a2a4a`, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: accent, transition: 'width 0.5s steps(20)' }} />
+              <div style={{ height: 8, background: '#f0f8f0', border: `1px solid ${SEC}88`, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: SEC, transition: 'width 0.5s steps(20)' }} />
               </div>
             </div>
           ))

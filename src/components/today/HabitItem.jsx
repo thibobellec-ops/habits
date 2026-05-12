@@ -1,18 +1,18 @@
 import { useState, useCallback } from 'react';
 
-// 8 particules en étoile, couleurs Game Boy Color
+// 8 particules en étoile — couleurs Mario/NES flashy
 const PARTICLES = [
-  { dx:  0, dy: -26, color: '#ffd700', delay: 0   },
-  { dx: 18, dy: -18, color: '#4a7cff', delay: 20  },
-  { dx: 26, dy:   0, color: '#20c060', delay: 0   },
-  { dx: 18, dy:  18, color: '#ffd700', delay: 20  },
-  { dx:  0, dy:  26, color: '#ff4040', delay: 0   },
-  { dx:-18, dy:  18, color: '#4a7cff', delay: 20  },
-  { dx:-26, dy:   0, color: '#20c060', delay: 0   },
-  { dx:-18, dy: -18, color: '#ff4040', delay: 20  },
+  { dx:  0, dy: -28, color: '#F8D000', delay: 0   },
+  { dx: 20, dy: -20, color: '#FC5252', delay: 20  },
+  { dx: 28, dy:   0, color: '#5AC54F', delay: 0   },
+  { dx: 20, dy:  20, color: '#3CBCFC', delay: 20  },
+  { dx:  0, dy:  28, color: '#F8D000', delay: 0   },
+  { dx:-20, dy:  20, color: '#FC9838', delay: 20  },
+  { dx:-28, dy:   0, color: '#B070F8', delay: 0   },
+  { dx:-20, dy: -20, color: '#FC5252', delay: 20  },
 ];
 
-export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff' }) {
+export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000' }) {
   const [animating, setAnimating] = useState(false);
   const isNeg = habit.type === 'negative';
 
@@ -24,20 +24,22 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
     onToggle(habit.id);
   }, [animating, onToggle, habit.id]);
 
-  // Couleurs de la checkbox selon l'état
-  let borderColor, bgColor, symbol;
+  let borderColor, bgColor, symbol, textColor;
   if (checked) {
-    borderColor = '#20ff80';
-    bgColor = 'rgba(32,255,128,0.15)';
-    symbol = '✓';
+    borderColor = accent;
+    bgColor     = `${accent}22`;
+    symbol      = '✓';
+    textColor   = '#1a1a2e';
   } else if (isNeg) {
-    borderColor = '#ff4040';
-    bgColor = 'rgba(255,64,64,0.08)';
-    symbol = '✗';
+    borderColor = '#FC5252';
+    bgColor     = 'rgba(252,82,82,0.08)';
+    symbol      = '✗';
+    textColor   = '#FC5252';
   } else {
-    borderColor = '#2a2a4a';
-    bgColor = 'transparent';
-    symbol = '';
+    borderColor = '#c0c0d8';
+    bgColor     = 'transparent';
+    symbol      = '';
+    textColor   = '#4a4a6e';
   }
 
   return (
@@ -49,7 +51,7 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
         position: 'relative',
         transition: 'background 0.1s',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
       {/* Checkbox pixel art */}
@@ -62,8 +64,8 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: "'Press Start 2P', monospace",
           fontSize: 9,
-          color: checked ? '#20ff80' : '#ff4040',
-          boxShadow: checked ? `2px 2px 0 ${borderColor}44` : '2px 2px 0 #000',
+          color: checked ? accent : '#FC5252',
+          boxShadow: checked ? `2px 2px 0 ${accent}66` : '2px 2px 0 #0002',
           imageRendering: 'pixelated',
           transition: 'all 0.15s',
         }}
@@ -78,7 +80,7 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
           className="px-star"
           style={{
             top: '50%', left: 19,
-            marginTop: -2, marginLeft: -2,
+            marginTop: -3, marginLeft: -3,
             background: p.color,
             '--tx': `${p.dx}px`,
             '--ty': `${p.dy}px`,
@@ -92,8 +94,7 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
         flex: 1,
         fontFamily: "'Press Start 2P', monospace",
         fontSize: 7, lineHeight: 1.8,
-        color: checked ? '#e0e0ff' : isNeg ? '#ff6060' : '#9090c0',
-        textDecoration: checked ? 'none' : 'none',
+        color: textColor,
         transition: 'color 0.15s',
         wordBreak: 'break-word',
       }}>
@@ -105,9 +106,9 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#4a7cff'
         <span style={{
           fontSize: 5, fontFamily: "'Press Start 2P', monospace",
           padding: '2px 5px',
-          border: `1px solid ${checked ? '#20ff80' : '#ff4040'}`,
-          color: checked ? '#20ff80' : '#ff4040',
-          background: checked ? 'rgba(32,255,128,0.08)' : 'rgba(255,64,64,0.08)',
+          border: `1px solid ${checked ? accent : '#FC5252'}`,
+          color: checked ? accent : '#FC5252',
+          background: checked ? `${accent}11` : 'rgba(252,82,82,0.08)',
           whiteSpace: 'nowrap', flexShrink: 0,
         }}>
           {checked ? 'OK' : 'EVITER'}
