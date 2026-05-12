@@ -217,14 +217,8 @@ export function AppProvider({ children }) {
 
   // ── Dispatch wrappé : optimistic UI + sync Supabase ─────────────────────
   const dispatch = useCallback(async (action) => {
-    console.log('[dispatch]', action.type, 'user=', user?.id ?? 'NULL');
-    // Mise à jour optimiste immédiate (UI réactive)
     rawDispatch(action);
-
-    if (!user) {
-      console.warn('[dispatch] Pas de user, sync ignorée');
-      return;
-    }
+    if (!user) return;
 
     // Sync en background
     try {
@@ -232,9 +226,7 @@ export function AppProvider({ children }) {
         case 'TOGGLE_CHECKIN': {
           const { space, habitId, date } = action;
           const currentVal = store.checkins[date]?.[space]?.[habitId] ?? false;
-          console.log('[toggleCheckin]', { userId: user.id, space, habitId, date, newVal: !currentVal });
           await toggleCheckin(user.id, space, habitId, date, !currentVal);
-          console.log('[toggleCheckin] OK');
           break;
         }
         case 'ADD_HABIT':
@@ -246,7 +238,6 @@ export function AppProvider({ children }) {
       }
     } catch (err) {
       console.error('Erreur sync Supabase:', err?.message || err);
-      alert(`Erreur sync: ${err?.message || JSON.stringify(err)}`);
     }
   }, [user, store]);
 

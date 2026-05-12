@@ -1,43 +1,90 @@
 import { useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { fmt, getDays, calcStreak, accentColor, accentSecondary } from '../../lib/stats';
 
-function fmt(d) { return d.toISOString().split('T')[0]; }
-function getDays(n) {
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (n - 1 - i)); return d;
-  });
-}
-function heatColor(rate) {
-  if (rate === null) return '#F0EDE8';
-  if (rate === 0)    return '#E5E2DC';
-  if (rate < 0.33)   return '#FDE68A';
-  if (rate < 0.66)   return '#D97706';
-  if (rate < 1)      return '#B45309';
-  return '#92400E';
+function heatColor(rate, accent) {
+  if (rate === null) return '#0d0d1a';
+  if (rate === 0)    return '#13132a';
+  if (rate < 0.33)   return `${accent}44`;
+  if (rate < 0.66)   return `${accent}88`;
+  if (rate < 1)      return `${accent}cc`;
+  return accent;
 }
 
-function KPI({ label, value, suffix, sub }) {
+const STREAK_MILESTONES = [7, 14, 30, 100];
+
+function StreakBarMini({ streak, accent }) {
+  const max = Math.max(100, streak + 10);
+  const pct = Math.min((streak / max) * 100, 100);
   return (
-    <div className="card" style={{ padding: '16px 18px', flex: '1 1 120px', minWidth: 0 }}>
-      <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#A8A29E', marginBottom: 6 }}>
-        {label}
-      </p>
-      <p style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 'clamp(22px, 4vw, 30px)', color: '#1C1917', letterSpacing: '-0.03em', lineHeight: 1 }}>
-        {value}
-        {suffix && <span style={{ fontSize: 16, color: '#B45309', marginLeft: 2 }}>{suffix}</span>}
-      </p>
-      {sub && <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: '#A8A29E', marginTop: 3 }}>{sub}</p>}
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a' }}>STREAK</span>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: accent }}>{streak}J</span>
+      </div>
+      <div style={{ position: 'relative', height: 18, background: '#0a0a1a', border: `2px solid ${accent}`, boxShadow: '3px 3px 0 #000' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: accent, transition: 'width 0.5s steps(20)' }} />
+        {STREAK_MILESTONES.filter(m => m <= max).map(m => (
+          <div key={m} style={{
+            position: 'absolute', left: `${(m / max) * 100}%`, top: -2, bottom: -2,
+            width: 3, background: streak >= m ? '#ffd700' : '#2a2a4a', zIndex: 2,
+          }} />
+        ))}
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#fff', textShadow: '1px 1px 0 #000', zIndex: 3,
+        }}>
+          {streak} JOURS
+        </div>
+      </div>
+      <div style={{ position: 'relative', height: 16, marginTop: 4 }}>
+        {STREAK_MILESTONES.filter(m => m <= max).map(m => (
+          <span key={m} style={{
+            position: 'absolute', left: `${(m / max) * 100}%`, transform: 'translateX(-50%)',
+            fontFamily: "'Press Start 2P',monospace", fontSize: 5,
+            color: streak >= m ? '#ffd700' : '#2a2a4a',
+            animation: streak === m ? 'pxMilestone 0.8s ease-out' : 'none',
+          }}>{m}J</span>
+        ))}
+      </div>
     </div>
   );
 }
 
+function KPI({ label, value, suffix, accent }) {
+  return (
+    <div style={{
+      padding: '14px 12px', flex: '1 1 100px', minWidth: 0,
+      background: '#13132a', border: `2px solid #2a2a4a`, boxShadow: '3px 3px 0 #000',
+    }}>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, letterSpacing: '0.08em', color: '#5a5a8a', marginBottom: 8 }}>
+        {label}
+      </p>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 18, color: accent, lineHeight: 1 }}>
+        {value}
+        {suffix && <span style={{ fontSize: 10, color: '#3a3a6a' }}>{suffix}</span>}
+      </p>
+    </div>
+  );
+}
+
+const CustomTip = ({ active, payload, label, accent }) =>
+  active && payload?.length ? (
+    <div style={{ background: '#13132a', border: `2px solid #2a2a4a`, boxShadow: '3px 3px 0 #000', padding: '8px 12px' }}>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#5a5a8a', marginBottom: 4 }}>{label}</p>
+      <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: accent }}>{payload[0].value}%</p>
+    </div>
+  ) : null;
+
 export default function DashboardView({ space }) {
-  const { store } = useApp();
-  const habits = store.habits[space].filter(h => !h.archived);
-  const ids = habits.map(h => h.id);
+  const { store }  = useApp();
+  const accent     = accentColor(space);
+  const secondary  = accentSecondary(space);
+  const habits     = store.habits[space].filter(h => !h.archived);
+  const ids        = habits.map(h => h.id);
   const { checkins } = store;
-  const todayKey = fmt(new Date());
+  const todayKey   = fmt(new Date());
 
   function rate(dateKey) {
     const day = checkins[dateKey]?.[space];
@@ -47,17 +94,7 @@ export default function DashboardView({ space }) {
 
   const todayDone = ids.filter(id => checkins[todayKey]?.[space]?.[id]).length;
   const todayRate = rate(todayKey);
-
-  const streak = useMemo(() => {
-    let s = 0;
-    const d = new Date(); d.setDate(d.getDate() - 1);
-    while (true) {
-      const r = rate(fmt(d));
-      if (r === null || r < 1) break;
-      s++; d.setDate(d.getDate() - 1);
-    }
-    return todayRate === 1 ? s + 1 : s;
-  }, [checkins, space]);
+  const streak    = useMemo(() => calcStreak(checkins, space, ids), [checkins, space, ids]);
 
   const last7  = getDays(7);
   const last30 = getDays(30);
@@ -83,11 +120,14 @@ export default function DashboardView({ space }) {
 
   const top3    = [...habitStats].sort((a, b) => b.pct - a.pct).slice(0, 3);
   const bottom3 = [...habitStats].sort((a, b) => a.pct - b.pct).slice(0, 3);
+  const cats    = [...new Set(habits.map(h => h.category))];
 
-  const cats = [...new Set(habits.map(h => h.category))];
   const catStats = useMemo(() => cats.map(cat => {
     const cids = habits.filter(h => h.category === cat).map(h => h.id);
-    const rs = last30.map(d => { const day = checkins[fmt(d)]?.[space]; return day ? cids.filter(id => day[id]).length / cids.length : null; }).filter(r => r !== null);
+    const rs = last30.map(d => {
+      const day = checkins[fmt(d)]?.[space];
+      return day ? cids.filter(id => day[id]).length / cids.length : null;
+    }).filter(r => r !== null);
     return { category: cat, pct: rs.length ? Math.round(rs.reduce((a, b) => a + b, 0) / rs.length * 100) : 0 };
   }), [checkins, space]);
 
@@ -101,59 +141,83 @@ export default function DashboardView({ space }) {
     return res;
   }, []);
 
-  const CustomTip = ({ active, payload, label }) => active && payload?.length ? (
-    <div style={{ background: '#fff', border: '1.5px solid #E5E2DC', borderRadius: 8, padding: '8px 14px' }}>
-      <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: '#A8A29E', marginBottom: 2 }}>{label}</p>
-      <p style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 20, color: '#B45309' }}>{payload[0].value}%</p>
-    </div>
-  ) : null;
-
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 16px' }}>
-      <h1 className="animate-fade-up delay-1" style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 'clamp(24px, 5vw, 32px)', letterSpacing: '-0.03em', color: '#1C1917', marginBottom: 20 }}>
-        Dashboard
-      </h1>
 
-      {/* KPIs */}
-      <div className="animate-fade-up delay-1" style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-        <KPI label="Aujourd'hui"    value={`${todayDone}/${habits.length}`} />
-        <KPI label="Streak"         value={streak}  suffix="j" />
-        <KPI label="7 jours"        value={rate7}   suffix="%" />
-        <KPI label="30 jours"       value={rate30}  suffix="%" />
+      <div className="animate-fade-up delay-1" style={{ marginBottom: 20 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: accent, letterSpacing: '0.1em', marginBottom: 8 }}>▶ STATISTIQUES</p>
+        <h1 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: '#e0e0ff' }}>DASHBOARD</h1>
       </div>
 
-      {/* Chart */}
-      <div className="card animate-fade-up delay-2" style={{ padding: '20px 16px 12px', marginBottom: 14 }}>
-        <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, fontWeight: 700, color: '#57534E', marginBottom: 14, paddingLeft: 4 }}>
-          Évolution — 30 jours
+      {/* KPIs */}
+      <div className="animate-fade-up delay-1" style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+        <KPI label="TODAY"   value={`${todayDone}/${habits.length}`} accent={accent} />
+        <KPI label="7J"      value={rate7}  suffix="%" accent={accent} />
+        <KPI label="30J"     value={rate30} suffix="%" accent={accent} />
+      </div>
+
+      {/* Streak bar */}
+      <div className="animate-fade-up delay-2" style={{
+        padding: '18px 20px', marginBottom: 14,
+        background: '#13132a', border: `2px solid ${accent}`, boxShadow: '4px 4px 0 #000',
+      }}>
+        <StreakBarMini streak={streak} accent={accent} />
+        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+          {[{ l: '1SEM', d: 7 }, { l: '2SEM', d: 14 }, { l: '1MOIS', d: 30 }, { l: '100J', d: 100 }].map(({ l, d }) => (
+            <div key={d} style={{ textAlign: 'center' }}>
+              <div style={{
+                width: 24, height: 24, margin: '0 auto 4px',
+                border: `2px solid ${streak >= d ? '#ffd700' : '#2a2a4a'}`,
+                background: streak >= d ? 'rgba(255,215,0,0.1)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
+              }}>{streak >= d ? '★' : '☆'}</div>
+              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: streak >= d ? '#ffd700' : '#2a2a4a' }}>{l}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart 30j */}
+      <div className="card animate-fade-up delay-2" style={{ padding: '18px 14px 12px', marginBottom: 12 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a', marginBottom: 14 }}>
+          EVOLUTION — 30J
         </p>
-        <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="2 4" stroke="rgba(0,0,0,0.05)" />
-            <XAxis dataKey="date" tick={{ fill: '#A8A29E', fontSize: 10, fontFamily: 'Space Grotesk' }} tickLine={false} interval={4} />
-            <YAxis domain={[0, 100]} tick={{ fill: '#A8A29E', fontSize: 10, fontFamily: 'Space Grotesk' }} tickLine={false} tickFormatter={v => `${v}%`} />
-            <Tooltip content={<CustomTip />} />
-            <Line type="monotone" dataKey="taux" stroke="#B45309" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#D97706', strokeWidth: 0 }} connectNulls />
+        <ResponsiveContainer width="100%" height={160}>
+          <LineChart data={chartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="2 4" stroke="#1a1a3a" />
+            <XAxis dataKey="date" tick={{ fill: '#3a3a6a', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} interval={4} />
+            <YAxis domain={[0, 100]} tick={{ fill: '#3a3a6a', fontSize: 7, fontFamily: "'Press Start 2P',monospace" }} tickLine={false} tickFormatter={v => `${v}%`} />
+            <Tooltip content={<CustomTip accent={accent} />} />
+            <Line type="stepAfter" dataKey="taux" stroke={accent} strokeWidth={2} dot={false} activeDot={{ r: 3, fill: accent, strokeWidth: 0 }} connectNulls />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Heatmap */}
-      <div className="card animate-fade-up delay-3" style={{ padding: '20px 16px', marginBottom: 14 }}>
-        <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, fontWeight: 700, color: '#57534E', marginBottom: 14 }}>
-          Heatmap — 90 jours
+      {/* Heatmap 90j */}
+      <div className="card animate-fade-up delay-3" style={{ padding: '18px 16px', marginBottom: 12 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#5a5a8a', marginBottom: 14 }}>
+          HEATMAP — 90J
         </p>
         {months.map(({ label, days: mDays }) => (
           <div key={label} style={{ marginBottom: 12 }}>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 700, color: '#A8A29E', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 5 }}>{label}</p>
+            <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a', marginBottom: 6, letterSpacing: '0.06em' }}>
+              {label.toUpperCase()}
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
               {mDays.map(d => {
                 const key = fmt(d);
                 const day = checkins[key]?.[space];
-                const r = (day && ids.length) ? ids.filter(id => day[id]).length / ids.length : null;
+                const r   = (day && ids.length) ? ids.filter(id => day[id]).length / ids.length : null;
                 return (
-                  <div key={key} title={`${d.toLocaleDateString('fr-FR')} — ${r !== null ? Math.round(r * 100) + '%' : '—'}`}
-                    style={{ width: 15, height: 15, borderRadius: 3, background: heatColor(r), border: key === todayKey ? '2px solid #B45309' : '1px solid rgba(0,0,0,0.05)', cursor: 'default' }}
+                  <div key={key}
+                    title={`${d.toLocaleDateString('fr-FR')} — ${r !== null ? Math.round(r * 100) + '%' : '—'}`}
+                    style={{
+                      width: 14, height: 14,
+                      background: heatColor(r, accent),
+                      border: key === todayKey ? `2px solid ${accent}` : '1px solid #0a0a1a',
+                      cursor: 'default',
+                      imageRendering: 'pixelated',
+                    }}
                   />
                 );
               })}
@@ -162,57 +226,51 @@ export default function DashboardView({ space }) {
         ))}
       </div>
 
-      {/* Top + Bottom */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 14 }}>
-        <div className="card animate-fade-up delay-3" style={{ padding: '18px 16px' }}>
-          <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#15803D', marginBottom: 12 }}>
-            ↑ Meilleures
-          </p>
+      {/* Top / Bottom */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginBottom: 12 }}>
+        <div className="card animate-fade-up delay-3" style={{ padding: '16px' }}>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#20ff80', marginBottom: 12 }}>▲ TOP</p>
           {top3.length === 0
-            ? <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#A8A29E' }}>Pas encore de données.</p>
+            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
             : top3.map((h, i) => (
-              <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8, gap: 8 }}>
-                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 13, color: '#57534E', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6 }}>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i + 1}. {h.name}
                 </span>
-                <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 16, color: '#15803D', flexShrink: 0 }}>{h.pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#20ff80', flexShrink: 0 }}>{h.pct}%</span>
               </div>
             ))
           }
         </div>
-        <div className="card animate-fade-up delay-4" style={{ padding: '18px 16px' }}>
-          <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#DC2626', marginBottom: 12 }}>
-            ↓ À améliorer
-          </p>
+        <div className="card animate-fade-up delay-4" style={{ padding: '16px' }}>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#ff4040', marginBottom: 12 }}>▼ A AMELIORER</p>
           {bottom3.length === 0
-            ? <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#A8A29E' }}>Pas encore de données.</p>
+            ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
             : bottom3.map((h, i) => (
-              <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8, gap: 8 }}>
-                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 13, color: '#57534E', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6 }}>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {i + 1}. {h.name}
                 </span>
-                <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 16, color: '#DC2626', flexShrink: 0 }}>{h.pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#ff4040', flexShrink: 0 }}>{h.pct}%</span>
               </div>
             ))
           }
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="card animate-fade-up delay-4" style={{ padding: '18px 16px', marginBottom: 20 }}>
-        <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#57534E', marginBottom: 16 }}>
-          Par catégorie — 30 jours
-        </p>
+      {/* Par catégorie */}
+      <div className="card animate-fade-up delay-4" style={{ padding: '16px', marginBottom: 20 }}>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#5a5a8a', marginBottom: 14 }}>PAR CATEGORIE — 30J</p>
         {catStats.length === 0
-          ? <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#A8A29E' }}>Pas encore de données.</p>
+          ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#3a3a5a' }}>PAS DE DONNEES</p>
           : catStats.map(({ category, pct }) => (
             <div key={category} style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, fontWeight: 600, color: '#57534E' }}>{category}</span>
-                <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 14, color: '#B45309' }}>{pct}%</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#7070a0' }}>{category.toUpperCase()}</span>
+                <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: accent }}>{pct}%</span>
               </div>
-              <div style={{ height: 4, background: '#F0EDE8', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: '#B45309', borderRadius: 99, transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)' }} />
+              <div style={{ height: 8, background: '#0a0a1a', border: `1px solid #2a2a4a`, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: accent, transition: 'width 0.5s steps(20)' }} />
               </div>
             </div>
           ))

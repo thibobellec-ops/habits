@@ -2,100 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── PIXEL ART DESIGN SYSTEM ─────────────────────────────────────── */
 :root {
-  --font-display: 'Fraunces', serif;
-  --font-ui: 'Space Grotesk', sans-serif;
+  --px-bg:    #0a0a1a;
+  --px-bg2:   #13132a;
+  --px-bg3:   #1c1c3e;
+  --px-border:#2a2a4a;
+  --px-text:  #e0e0ff;
+  --px-dim:   #5a5a8a;
 
-  --ink: #1C1917;
-  --ink-2: #292524;
-  --stone: #57534E;
-  --muted: #A8A29E;
-  --border: #E5E2DC;
-  --surface: #FFFFFF;
-  --bg: #F8F7F4;
+  /* Pro space — bleu / violet */
+  --pro:       #4a7cff;
+  --pro-dark:  #1a2860;
+  --pro-alt:   #7c3aed;
 
-  --amber: #B45309;
-  --amber-light: #D97706;
-  --amber-dark: #92400E;
-  --amber-bg: rgba(180, 83, 9, 0.07);
-  --amber-border: rgba(180, 83, 9, 0.25);
+  /* Perso space — vert / orange */
+  --perso:      #20c060;
+  --perso-dark: #0a3020;
+  --perso-alt:  #ff7020;
 
-  --green: #15803D;
-  --green-bg: rgba(21, 128, 61, 0.08);
-  --red: #DC2626;
-  --red-bg: rgba(220, 38, 38, 0.07);
-
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  /* Statuts */
+  --gold:  #ffd700;
+  --red:   #ff4040;
+  --ok:    #20ff80;
 }
 
+/* ── Animations ─────────────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes checkPop {
   0%   { transform: scale(1); }
-  45%  { transform: scale(1.35); }
+  40%  { transform: scale(1.4); }
   100% { transform: scale(1); }
 }
+@keyframes pxStar {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx),var(--ty)) scale(0); }
+}
+@keyframes pxMilestone {
+  0%,100% { transform: scale(1); filter: brightness(1); }
+  50%     { transform: scale(1.5); filter: brightness(2.5); }
+}
+@keyframes pxBlink {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Base ────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background-color: #FFFFFF;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-attachment: fixed;
-  color: var(--ink);
-  font-family: var(--font-ui);
-  font-size: 15px;
-  -webkit-font-smoothing: antialiased;
+  background: var(--px-bg);
+  color: var(--px-text);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  line-height: 2;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+/* Scanlines CRT */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 30, 0.10) 3px,
+    rgba(0, 0, 30, 0.10) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
 
 #root { min-height: 100vh; }
 
-/* ── Animations ─────────────────────────── */
+/* ── Animations classes ──────────────────────────────────────────── */
 .animate-fade-up {
-  animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fadeUp 0.35s ease-out forwards;
   opacity: 0;
 }
 .delay-1 { animation-delay: 0.05s; }
-.delay-2 { animation-delay: 0.13s; }
-.delay-3 { animation-delay: 0.21s; }
-.delay-4 { animation-delay: 0.29s; }
+.delay-2 { animation-delay: 0.12s; }
+.delay-3 { animation-delay: 0.19s; }
+.delay-4 { animation-delay: 0.26s; }
 
-/* ── Card ───────────────────────────────── */
+/* ── Pixel Card ──────────────────────────────────────────────────── */
 .card {
-  background: #FFFFFF;
-  border: 1.5px solid var(--border);
-  border-radius: var(--r-lg);
+  background: var(--px-bg2);
+  border: 2px solid var(--px-border);
+  box-shadow: 4px 4px 0 #000;
+  border-radius: 0;
 }
 
-/* ── Buttons ────────────────────────────── */
+/* ── Buttons ─────────────────────────────────────────────────────── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--amber);
+  background: var(--pro);
   color: #fff;
-  padding: 11px 22px;
-  border-radius: var(--r-sm);
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 14px;
-  border: none;
+  padding: 10px 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   cursor: pointer;
-  letter-spacing: 0.01em;
-  transition: background 0.18s, transform 0.18s;
+  box-shadow: 3px 3px 0 #000;
+  transition: transform 0.06s, box-shadow 0.06s;
+  image-rendering: pixelated;
 }
-.btn-primary:hover {
-  background: var(--amber-dark);
-  transform: translateY(-1px);
+.btn-primary:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
 }
 
 .btn-ghost {
@@ -103,26 +127,37 @@ body {
   align-items: center;
   gap: 6px;
   background: transparent;
-  color: var(--stone);
-  padding: 10px 20px;
-  border-radius: var(--r-sm);
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 14px;
-  border: 1.5px solid var(--border);
+  color: var(--px-text);
+  padding: 10px 16px;
+  border: 2px solid var(--px-border);
+  border-radius: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   cursor: pointer;
-  transition: border-color 0.18s, color 0.18s;
+  box-shadow: 3px 3px 0 #000;
+  transition: transform 0.06s, box-shadow 0.06s;
 }
-.btn-ghost:hover {
-  border-color: var(--amber);
-  color: var(--amber);
+.btn-ghost:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
 }
 
-/* ── Check animation ────────────────────── */
-.check-pop { animation: checkPop 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+/* ── Check animation ─────────────────────────────────────────────── */
+.check-pop { animation: checkPop 0.28s ease-out; }
 
-/* ── Scrollbar ──────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+/* ── Pixel star particles ────────────────────────────────────────── */
+.px-star {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  animation: pxStar 0.4s ease-out forwards;
+  z-index: 10;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--px-bg); }
+::-webkit-scrollbar-thumb { background: var(--px-border); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--pro); }
