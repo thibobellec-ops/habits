@@ -1,35 +1,23 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Plus, Archive, GripVertical, Edit2, Check } from 'lucide-react';
+import { X, Plus, Archive, Edit2, Check, RotateCcw } from 'lucide-react';
+import { accentColor, accentDark } from '../../lib/stats';
 
 function uid() { return `habit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
-const inp = {
-  width: '100%', padding: '9px 12px',
-  background: '#F5F2EE', border: '1.5px solid #E5E2DC',
-  borderRadius: 6, color: '#1C1917',
-  fontFamily: 'Space Grotesk, sans-serif', fontSize: 14, outline: 'none',
-};
+const PX = "'Press Start 2P', monospace";
 
-const label = {
-  fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, fontWeight: 700,
-  letterSpacing: '0.08em', textTransform: 'uppercase', color: '#A8A29E',
-  display: 'block', marginBottom: 7,
-};
-
-function HabitForm({ habit, categories, onSave, onCancel }) {
+function HabitForm({ habit, categories, onSave, onCancel, accent, accentDk }) {
   const [name,   setName]   = useState(habit?.name     || '');
   const [cat,    setCat]    = useState(habit?.category || categories[0] || '');
   const [newCat, setNewCat] = useState('');
   const [type,   setType]   = useState(habit?.type     || 'positive');
   const [addCat, setAddCat] = useState(false);
 
-  // Final category is either the new one (if addCat + typed) or the selected pill
   const finalCat = addCat && newCat.trim() ? newCat.trim() : cat;
 
   function save() {
-    if (!name.trim()) return;
-    if (!finalCat.trim()) return;
+    if (!name.trim() || !finalCat.trim()) return;
     onSave({
       ...(habit || {}),
       id: habit?.id || uid(),
@@ -41,197 +29,210 @@ function HabitForm({ habit, categories, onSave, onCancel }) {
     });
   }
 
+  const inputStyle = {
+    width: '100%', padding: '10px 12px',
+    background: '#f8f8ff', border: `2px solid #d0d0e0`,
+    color: '#1a1a2e', fontFamily: PX, fontSize: 8,
+    outline: 'none', boxSizing: 'border-box',
+    boxShadow: '2px 2px 0 #0001',
+    transition: 'border-color 0.15s',
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Nom */}
       <div>
-        <span style={label}>Nom</span>
+        <span style={{ fontFamily: PX, fontSize: 6, color: '#9090b0', display: 'block', marginBottom: 8, letterSpacing: '0.06em' }}>
+          ✏️ NOM
+        </span>
         <input
           value={name}
           onChange={e => setName(e.target.value)}
-          style={inp}
-          placeholder="Nom de l'habitude"
+          style={inputStyle}
+          placeholder="Nom de l'habitude..."
           onKeyDown={e => e.key === 'Enter' && save()}
+          onFocus={e => e.target.style.borderColor = accent}
+          onBlur={e => e.target.style.borderColor = '#d0d0e0'}
         />
       </div>
 
       {/* Catégorie */}
       <div>
-        <span style={label}>Catégorie</span>
-
-        {/* Pills pour catégories existantes */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 8 }}>
+        <span style={{ fontFamily: PX, fontSize: 6, color: '#9090b0', display: 'block', marginBottom: 8, letterSpacing: '0.06em' }}>
+          🗂️ CATEGORIE
+        </span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {categories.map(c => {
             const active = !addCat && cat === c;
             return (
-              <button
-                key={c}
-                type="button"
+              <button key={c} type="button"
                 onClick={() => { setCat(c); setAddCat(false); setNewCat(''); }}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: 6,
-                  border: active ? '1.5px solid #B45309' : '1.5px solid #E5E2DC',
-                  background: active ? 'rgba(180,83,9,0.08)' : '#F5F2EE',
-                  color: active ? '#B45309' : '#57534E',
-                  fontFamily: 'Space Grotesk, sans-serif',
-                  fontWeight: active ? 700 : 500,
-                  fontSize: 13,
+                  padding: '6px 10px',
+                  border: `2px solid ${active ? accent : '#d0d0e0'}`,
+                  background: active ? `${accent}22` : '#f8f8ff',
+                  color: active ? accentDk : '#4a4a6e',
+                  fontFamily: PX, fontSize: 6,
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5,
+                  boxShadow: active ? `2px 2px 0 ${accentDk}` : '2px 2px 0 #0001',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  transition: 'all 0.1s',
                 }}
               >
-                {active && <Check size={11} strokeWidth={3} />}
-                {c}
+                {active && <Check size={8} strokeWidth={3} />}
+                {c.toUpperCase()}
               </button>
             );
           })}
-
-          {/* Bouton nouvelle catégorie */}
           {!addCat && (
-            <button
-              type="button"
-              onClick={() => setAddCat(true)}
-              style={{
-                padding: '6px 12px', borderRadius: 6,
-                border: '1.5px dashed rgba(180,83,9,0.35)',
-                background: 'transparent',
-                color: '#B45309',
-                fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600, fontSize: 13,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}
-            >
-              <Plus size={12} /> Nouvelle
+            <button type="button" onClick={() => setAddCat(true)} style={{
+              padding: '6px 10px',
+              border: `2px dashed ${accent}88`,
+              background: 'transparent',
+              color: accent, fontFamily: PX, fontSize: 6,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <Plus size={8} /> NEW
             </button>
           )}
         </div>
-
-        {/* Saisie nouvelle catégorie */}
         {addCat && (
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               autoFocus
               value={newCat}
               onChange={e => setNewCat(e.target.value)}
-              style={{ ...inp, flex: 1 }}
-              placeholder="Nom de la catégorie"
+              style={{ ...inputStyle, flex: 1 }}
+              placeholder="Nouvelle catégorie..."
               onKeyDown={e => {
                 if (e.key === 'Enter' && newCat.trim()) setAddCat(false);
                 if (e.key === 'Escape') { setAddCat(false); setNewCat(''); }
               }}
+              onFocus={e => e.target.style.borderColor = accent}
+              onBlur={e => e.target.style.borderColor = '#d0d0e0'}
             />
-            <button
-              type="button"
+            <button type="button"
               onClick={() => { if (newCat.trim()) setAddCat(false); else { setAddCat(false); setNewCat(''); } }}
-              className="btn-ghost"
-              style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+              style={{
+                padding: '8px 10px', border: `2px solid #d0d0e0`,
+                background: '#f8f8ff', color: '#4a4a6e',
+                fontFamily: PX, fontSize: 6, cursor: 'pointer',
+                boxShadow: '2px 2px 0 #0001', whiteSpace: 'nowrap', flexShrink: 0,
+              }}
             >
-              {newCat.trim() ? 'Valider' : 'Annuler'}
+              {newCat.trim() ? '✓ OK' : 'ANNUL'}
             </button>
           </div>
         )}
-
-        {/* Affichage de la catégorie choisie si nouvelle */}
         {addCat && newCat.trim() && (
-          <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#B45309', marginTop: 6, fontWeight: 600 }}>
-            → Nouvelle catégorie : « {newCat.trim()} »
+          <p style={{ fontFamily: PX, fontSize: 5, color: accent, marginTop: 6 }}>
+            → «{newCat.trim().toUpperCase()}»
           </p>
         )}
       </div>
 
       {/* Type */}
       <div>
-        <span style={label}>Type</span>
+        <span style={{ fontFamily: PX, fontSize: 6, color: '#9090b0', display: 'block', marginBottom: 8, letterSpacing: '0.06em' }}>
+          🎯 TYPE
+        </span>
         <div style={{ display: 'flex', gap: 8 }}>
-          {['positive', 'negative'].map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              style={{
-                flex: 1, padding: '9px 12px', borderRadius: 6, cursor: 'pointer',
-                fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600, fontSize: 13,
-                border: type === t ? '1.5px solid transparent' : '1.5px solid #E5E2DC',
-                background: type === t
-                  ? (t === 'positive' ? 'rgba(180,83,9,0.09)' : 'rgba(220,38,38,0.07)')
-                  : '#F5F2EE',
-                color: type === t
-                  ? (t === 'positive' ? '#B45309' : '#DC2626')
-                  : '#A8A29E',
-                transition: 'all 0.15s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}
-            >
-              {type === t && <Check size={12} strokeWidth={3} />}
-              {t === 'positive' ? 'Positif' : 'Négatif (à éviter)'}
+          {[
+            { val: 'positive', label: '✅ POSITIF',   col: '#5AC54F', dk: '#2D7B23' },
+            { val: 'negative', label: '⚠️ A EVITER',  col: '#FC5252', dk: '#C00000' },
+          ].map(({ val, label, col, dk }) => (
+            <button key={val} type="button" onClick={() => setType(val)} style={{
+              flex: 1, padding: '10px 8px', cursor: 'pointer',
+              fontFamily: PX, fontSize: 6,
+              border: `2px solid ${type === val ? col : '#d0d0e0'}`,
+              background: type === val ? `${col}18` : '#f8f8ff',
+              color: type === val ? dk : '#9090b0',
+              boxShadow: type === val ? `2px 2px 0 ${dk}` : '2px 2px 0 #0001',
+              transition: 'all 0.1s',
+            }}>
+              {label}
             </button>
           ))}
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
-        <button type="button" onClick={onCancel} className="btn-ghost" style={{ flex: 1 }}>
-          Annuler
+      <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
+        <button type="button" onClick={onCancel} style={{
+          flex: 1, padding: '10px', border: `2px solid #d0d0e0`,
+          background: '#f0f0f8', color: '#4a4a6e',
+          fontFamily: PX, fontSize: 6, cursor: 'pointer',
+          boxShadow: '3px 3px 0 #0002',
+        }}>
+          ✕ ANNULER
         </button>
-        <button type="button" onClick={save} className="btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-          {habit ? 'Modifier' : 'Ajouter'}
+        <button type="button" onClick={save} style={{
+          flex: 1, padding: '10px', border: `2px solid ${accent}`,
+          background: accent, color: '#fff',
+          fontFamily: PX, fontSize: 6, cursor: 'pointer',
+          boxShadow: `3px 3px 0 ${accentDk}`,
+        }}>
+          {habit ? '✏️ MODIFIER' : '➕ AJOUTER'}
         </button>
       </div>
     </div>
   );
 }
 
-function HabitRow({ habit, onEdit, onArchive }) {
+function HabitRow({ habit, onEdit, onArchive, accent, accentDk }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-      borderRadius: 7, background: '#F5F2EE', marginBottom: 5,
-      opacity: habit.archived ? 0.45 : 1,
+      display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px',
+      background: '#ffffff',
+      border: `2px solid ${habit.archived ? '#e0e0f0' : '#d0d0e0'}`,
+      boxShadow: habit.archived ? 'none' : '3px 3px 0 #0001',
+      marginBottom: 6,
+      opacity: habit.archived ? 0.5 : 1,
+      transition: 'all 0.15s',
     }}>
-      <GripVertical size={13} color="#C7C3BD" style={{ cursor: 'grab', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontFamily: 'Space Grotesk, sans-serif', fontSize: 13, fontWeight: 600,
-          color: '#1C1917', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          fontFamily: PX, fontSize: 7, color: '#1a1a2e',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          marginBottom: 5,
         }}>
           {habit.name}
         </p>
-        <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <span style={{
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 700,
-            padding: '1px 5px', borderRadius: 3,
-            background: habit.type === 'negative' ? 'rgba(220,38,38,0.07)' : 'rgba(180,83,9,0.08)',
-            color: habit.type === 'negative' ? '#DC2626' : '#B45309',
+            fontFamily: PX, fontSize: 5, padding: '2px 6px',
+            border: `1px solid ${habit.type === 'negative' ? '#FC5252' : '#5AC54F'}`,
+            color: habit.type === 'negative' ? '#FC5252' : '#2D7B23',
+            background: habit.type === 'negative' ? 'rgba(252,82,82,0.07)' : 'rgba(90,197,79,0.07)',
           }}>
-            {habit.type === 'negative' ? 'Négatif' : 'Positif'}
+            {habit.type === 'negative' ? '⚠ EVITER' : '✓ POSITIF'}
           </span>
-          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, color: '#A8A29E' }}>
-            {habit.category}
+          <span style={{ fontFamily: PX, fontSize: 5, color: '#9090b0', padding: '2px 0' }}>
+            {habit.category.toUpperCase()}
           </span>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={() => onEdit(habit)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C7C3BD', padding: 4, lineHeight: 0 }}
-        onMouseEnter={e => e.currentTarget.style.color = '#B45309'}
-        onMouseLeave={e => e.currentTarget.style.color = '#C7C3BD'}
+      <button type="button" onClick={() => onEdit(habit)} style={{
+        background: 'none', border: `2px solid #d0d0e0`, cursor: 'pointer',
+        color: '#9090b0', padding: '5px', lineHeight: 0,
+        transition: 'all 0.1s',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#d0d0e0'; e.currentTarget.style.color = '#9090b0'; }}
       >
-        <Edit2 size={13} />
+        <Edit2 size={11} />
       </button>
-      <button
-        type="button"
-        onClick={() => onArchive(habit)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C7C3BD', padding: 4, lineHeight: 0 }}
+      <button type="button" onClick={() => onArchive(habit)} style={{
+        background: 'none', border: `2px solid #d0d0e0`, cursor: 'pointer',
+        color: '#9090b0', padding: '5px', lineHeight: 0,
+        transition: 'all 0.1s',
+      }}
         title={habit.archived ? 'Réactiver' : 'Archiver'}
-        onMouseEnter={e => e.currentTarget.style.color = '#DC2626'}
-        onMouseLeave={e => e.currentTarget.style.color = '#C7C3BD'}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#FC5252'; e.currentTarget.style.color = '#FC5252'; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#d0d0e0'; e.currentTarget.style.color = '#9090b0'; }}
       >
-        <Archive size={13} />
+        {habit.archived ? <RotateCcw size={11} /> : <Archive size={11} />}
       </button>
     </div>
   );
@@ -241,6 +242,9 @@ export default function ManageModal({ space, onClose }) {
   const { store, dispatch } = useApp();
   const [editing, setEditing] = useState(null);
   const [adding,  setAdding]  = useState(false);
+
+  const accent   = accentColor(space);
+  const accentDk = accentDark(space);
 
   const habits   = store.habits[space];
   const active   = habits.filter(h => !h.archived);
@@ -262,112 +266,117 @@ export default function ManageModal({ space, onClose }) {
     setEditing(h);
   }
 
+  const spaceLabel = space === 'pro' ? '💼 PRO' : '🏠 PERSO';
+
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(28,25,23,0.35)', backdropFilter: 'blur(6px)',
+        background: 'rgba(18,32,176,0.55)', backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
       }}
     >
       <div style={{
-        background: '#FFFFFF', border: '1.5px solid #E5E2DC', borderRadius: 14,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        background: '#ffffff',
+        border: `3px solid ${accent}`,
+        boxShadow: `6px 6px 0 ${accentDk}`,
         width: '100%', maxWidth: 520, maxHeight: '90vh',
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
       }}>
+
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '18px 20px', borderBottom: '1.5px solid #F0EDE8',
+          padding: '14px 18px',
+          background: '#1220B0',
+          borderBottom: `3px solid ${accent}`,
         }}>
           <div>
-            <h2 style={{
-              fontFamily: 'Fraunces, serif', fontWeight: 700, fontSize: 20,
-              color: '#1C1917', letterSpacing: '-0.025em',
-            }}>
-              Mes habitudes
+            <h2 style={{ fontFamily: PX, fontSize: 11, color: accent, marginBottom: 6 }}>
+              ⚙️ MES HABITUDES
             </h2>
-            <p style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 12, color: '#A8A29E', marginTop: 2 }}>
-              {space === 'pro' ? '💼 Pro' : '🏠 Perso'} — {active.length} actives
+            <p style={{ fontFamily: PX, fontSize: 6, color: '#4a5aaa' }}>
+              {spaceLabel} — {active.length} ACTIVES
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#A8A29E', lineHeight: 0, padding: 4 }}
+          <button type="button" onClick={onClose} style={{
+            background: 'none', border: `2px solid #2a3aaa`, cursor: 'pointer',
+            color: '#4a5aaa', padding: 6, lineHeight: 0,
+            transition: 'all 0.1s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a3aaa'; e.currentTarget.style.color = '#4a5aaa'; }}
           >
-            <X size={18} />
+            <X size={14} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ overflowY: 'auto', padding: '18px 20px', flex: 1 }}>
+        <div style={{ overflowY: 'auto', padding: '16px 18px', flex: 1, background: '#f8f8ff' }}>
 
-          {/* Form */}
+          {/* Form ajout/édition */}
           {(adding || editing) && (
             <div style={{
-              background: '#FAF8F5', border: '1.5px solid #E5E2DC',
-              borderRadius: 10, padding: '16px 16px 14px', marginBottom: 18,
+              background: '#ffffff',
+              border: `3px solid ${accent}`,
+              boxShadow: `4px 4px 0 ${accentDk}`,
+              padding: '16px 16px 14px', marginBottom: 16,
             }}>
-              <p style={{
-                fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                color: '#B45309', marginBottom: 16,
-              }}>
-                {editing ? 'Modifier l\'habitude' : 'Nouvelle habitude'}
+              <p style={{ fontFamily: PX, fontSize: 7, color: accent, marginBottom: 14, letterSpacing: '0.04em' }}>
+                {editing ? '✏️ MODIFIER' : '➕ NOUVELLE HABITUDE'}
               </p>
               <HabitForm
                 habit={editing}
                 categories={cats}
                 onSave={save}
                 onCancel={() => { setEditing(null); setAdding(false); }}
+                accent={accent}
+                accentDk={accentDk}
               />
             </div>
           )}
 
-          {/* Add button */}
+          {/* Bouton ajouter */}
           {!adding && !editing && (
-            <button
-              type="button"
-              onClick={() => setAdding(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                padding: '11px 14px', marginBottom: 18,
-                background: 'rgba(180,83,9,0.04)', border: '1.5px dashed rgba(180,83,9,0.3)',
-                borderRadius: 8, cursor: 'pointer',
-                fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600, fontSize: 13,
-                color: '#B45309',
-              }}
+            <button type="button" onClick={() => setAdding(true)} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              width: '100%', padding: '12px 14px', marginBottom: 16,
+              background: `${accent}11`,
+              border: `2px dashed ${accent}`,
+              color: accentDk,
+              fontFamily: PX, fontSize: 7,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = `${accent}22`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = `${accent}11`; }}
             >
-              <Plus size={14} /> Ajouter une habitude
+              <Plus size={12} /> AJOUTER UNE HABITUDE
             </button>
           )}
 
-          {/* Active list */}
-          <p style={{
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 700,
-            letterSpacing: '0.09em', textTransform: 'uppercase', color: '#A8A29E', marginBottom: 8,
-          }}>
-            Actives ({active.length})
+          {/* Actives */}
+          <p style={{ fontFamily: PX, fontSize: 6, color: '#9090b0', marginBottom: 10, letterSpacing: '0.08em' }}>
+            ✅ ACTIVES ({active.length})
           </p>
+          {active.length === 0 && (
+            <p style={{ fontFamily: PX, fontSize: 6, color: '#c0c0d8', marginBottom: 12, lineHeight: 2 }}>
+              🌱 AUCUNE HABITUDE — AJOUTE-EN UNE !
+            </p>
+          )}
           {active.map(h => (
-            <HabitRow key={h.id} habit={h} onEdit={startEdit} onArchive={archive} />
+            <HabitRow key={h.id} habit={h} onEdit={startEdit} onArchive={archive} accent={accent} accentDk={accentDk} />
           ))}
 
-          {/* Archived */}
+          {/* Archivées */}
           {archived.length > 0 && (
             <>
-              <p style={{
-                fontFamily: 'Space Grotesk, sans-serif', fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.09em', textTransform: 'uppercase',
-                color: '#C7C3BD', margin: '18px 0 8px',
-              }}>
-                Archivées ({archived.length})
+              <p style={{ fontFamily: PX, fontSize: 6, color: '#c0c0d8', margin: '18px 0 10px', letterSpacing: '0.08em' }}>
+                📦 ARCHIVEES ({archived.length})
               </p>
               {archived.map(h => (
-                <HabitRow key={h.id} habit={h} onEdit={startEdit} onArchive={archive} />
+                <HabitRow key={h.id} habit={h} onEdit={startEdit} onArchive={archive} accent={accent} accentDk={accentDk} />
               ))}
             </>
           )}
