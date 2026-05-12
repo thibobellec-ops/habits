@@ -1,3 +1,4 @@
+console.log('🟢 App v4 chargée — ' + new Date().toISOString());
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
