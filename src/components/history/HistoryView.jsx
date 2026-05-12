@@ -14,6 +14,34 @@ function heatColor(rate) {
   return SEC;
 }
 
+// Lundi de la semaine courante → aujourd'hui
+function getWeekDays() {
+  const today = new Date();
+  const dow = today.getDay(); // 0=dim, 1=lun...
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  const days = [];
+  const d = new Date(monday);
+  while (d <= today) {
+    days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+// 1er du mois courant → aujourd'hui
+function getMonthDays() {
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth(), 1);
+  const days = [];
+  const d = new Date(first);
+  while (d <= today) {
+    days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
 function TableView({ days, habits, checkins, space }) {
   const active = habits.filter(h => !h.archived);
   return (
@@ -27,26 +55,31 @@ function TableView({ days, habits, checkins, space }) {
               width: 180, position: 'sticky', left: 0, background: '#fff',
               borderBottom: `2px solid #f0f0f8`,
             }}>
-              HABITUDE
+              📋 HABITUDE
             </th>
-            {days.map(d => (
-              <th key={d.toISOString()} style={{
-                padding: '6px 2px',
-                fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: '#9090b0',
-                textAlign: 'center', minWidth: 30,
-                borderBottom: `2px solid #f0f0f8`,
-              }}>
-                <div>{d.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2).toUpperCase()}</div>
-                <div style={{ color: '#c0c0d8' }}>{d.getDate()}</div>
-              </th>
-            ))}
+            {days.map(d => {
+              const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+              return (
+                <th key={d.toISOString()} style={{
+                  padding: '6px 2px',
+                  fontFamily: "'Press Start 2P',monospace", fontSize: 5,
+                  color: isWeekend ? SEC : '#9090b0',
+                  textAlign: 'center', minWidth: 30,
+                  borderBottom: `2px solid #f0f0f8`,
+                  background: isWeekend ? `${SEC}08` : 'transparent',
+                }}>
+                  <div>{d.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2).toUpperCase()}</div>
+                  <div style={{ color: '#c0c0d8' }}>{d.getDate()}</div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
           {active.length === 0 && (
             <tr>
               <td colSpan={days.length + 1} style={{ padding: 24, textAlign: 'center', fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#9090b0' }}>
-                AUCUNE HABITUDE
+                🌱 AUCUNE HABITUDE
               </td>
             </tr>
           )}
@@ -69,13 +102,13 @@ function TableView({ days, habits, checkins, space }) {
                   <td key={key} style={{ padding: '3px 2px', textAlign: 'center' }}>
                     <div style={{
                       width: 22, height: 22, margin: '0 auto',
-                      background: !has ? '#f8f0f0' : val ? `${SEC}18` : 'rgba(252,82,82,0.06)',
-                      border: `1px solid ${!has ? '#e8e8f0' : val ? SEC : '#FC525244'}`,
+                      background: !has ? '#f8f0f0' : val ? 'rgba(90,197,79,0.15)' : 'rgba(252,82,82,0.06)',
+                      border: `1px solid ${!has ? '#e8e8f0' : val ? '#5AC54F' : '#FC525244'}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: "'Press Start 2P',monospace", fontSize: 9,
                     }}>
                       {has && (val
-                        ? <span style={{ color: SEC }}>✓</span>
+                        ? <span style={{ color: '#5AC54F' }}>✓</span>
                         : <span style={{ color: '#FC525288' }}>✗</span>
                       )}
                     </div>
@@ -110,7 +143,7 @@ function HeatmapView({ days, habits, checkins, space }) {
       {months.map(({ label, days: mDays }) => (
         <div key={label} style={{ marginBottom: 18 }}>
           <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e', marginBottom: 8, letterSpacing: '0.08em' }}>
-            {label.toUpperCase()}
+            📆 {label.toUpperCase()}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {mDays.map(d => {
@@ -150,21 +183,26 @@ function HeatmapView({ days, habits, checkins, space }) {
 export default function HistoryView({ space }) {
   const { store }  = useApp();
   const [view, setView] = useState('SEMAINE');
-  const n          = view === 'SEMAINE' ? 7 : view === 'MOIS' ? 30 : 90;
-  const days       = useMemo(() => getDays(n), [n]);
   const views      = ['SEMAINE', 'MOIS', '90J'];
+
+  const days = useMemo(() => {
+    if (view === 'SEMAINE') return getWeekDays();
+    if (view === 'MOIS')    return getMonthDays();
+    return getDays(90);
+  }, [view]);
+
+  const VIEW_ICONS = { SEMAINE: '📅', MOIS: '🗓️', '90J': '📊' };
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 16px' }}>
 
       <div className="animate-fade-up delay-1" style={{ marginBottom: 24 }}>
         <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: SEC, letterSpacing: '0.1em', marginBottom: 8 }}>
-          ▶ HISTORIQUE
+          📜 HISTORIQUE
         </p>
         <h1 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: '#1a1a2e', marginBottom: 18 }}>
           ARCHIVE
         </h1>
-        {/* Toggle vue */}
         <div style={{ display: 'flex', gap: 0, background: '#f8f0f0', border: `3px solid ${SEC}`, boxShadow: `3px 3px 0 ${SEC_DK}`, width: 'fit-content' }}>
           {views.map(v => (
             <button key={v} onClick={() => setView(v)} style={{
@@ -174,10 +212,16 @@ export default function HistoryView({ space }) {
               color: view === v ? '#fff' : '#9090b0',
               transition: 'all 0.15s',
             }}>
-              {v}
+              {VIEW_ICONS[v]} {v}
             </button>
           ))}
         </div>
+        {/* Plage affichée */}
+        {days.length > 0 && (
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: '#9090b0', marginTop: 8 }}>
+            {days[0].toLocaleDateString('fr-FR')} → {days[days.length - 1].toLocaleDateString('fr-FR')} · {days.length} jours
+          </p>
+        )}
       </div>
 
       <div className="card animate-fade-up delay-2" style={{ padding: '18px 14px', borderColor: `${SEC}88` }}>

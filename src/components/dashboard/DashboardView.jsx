@@ -23,7 +23,7 @@ function StreakBarMini({ streak }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#4a4a6e' }}>STREAK</span>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#4a4a6e' }}>🔥 STREAK</span>
         <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: SEC }}>{streak}J</span>
       </div>
       <div style={{ position: 'relative', height: 18, background: '#f0f8f0', border: `2px solid ${SEC}`, boxShadow: `3px 3px 0 ${SEC_DK}` }}>
@@ -145,15 +145,17 @@ export default function DashboardView({ space }) {
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 16px' }}>
 
       <div className="animate-fade-up delay-1" style={{ marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: SEC, letterSpacing: '0.1em', marginBottom: 8 }}>▶ STATISTIQUES</p>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: SEC, letterSpacing: '0.1em', marginBottom: 8 }}>
+          📊 STATISTIQUES
+        </p>
         <h1 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 14, color: '#1a1a2e' }}>DASHBOARD</h1>
       </div>
 
       {/* KPIs */}
       <div className="animate-fade-up delay-1" style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-        <KPI label="TODAY"   value={`${todayDone}/${habits.length}`} />
-        <KPI label="7J"      value={rate7}  suffix="%" />
-        <KPI label="30J"     value={rate30} suffix="%" />
+        <KPI label="🎯 TODAY"   value={`${todayDone}/${habits.length}`} />
+        <KPI label="📅 7J"      value={rate7}  suffix="%" />
+        <KPI label="🗓️ 30J"    value={rate30} suffix="%" />
       </div>
 
       {/* Streak bar */}
@@ -170,7 +172,7 @@ export default function DashboardView({ space }) {
                 border: `2px solid ${streak >= d ? '#F8D000' : '#d0d0e0'}`,
                 background: streak >= d ? 'rgba(248,208,0,0.12)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11,
-              }}>{streak >= d ? '★' : '☆'}</div>
+              }}>{streak >= d ? '⭐' : '○'}</div>
               <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: streak >= d ? '#F8D000' : '#c0c0d8' }}>{l}</p>
             </div>
           ))}
@@ -180,7 +182,7 @@ export default function DashboardView({ space }) {
       {/* Chart 30j */}
       <div className="card animate-fade-up delay-2" style={{ padding: '18px 14px 12px', marginBottom: 12 }}>
         <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#9090b0', marginBottom: 14 }}>
-          EVOLUTION — 30J
+          📈 EVOLUTION — 30J
         </p>
         <ResponsiveContainer width="100%" height={160}>
           <LineChart data={chartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
@@ -196,7 +198,7 @@ export default function DashboardView({ space }) {
       {/* Heatmap 90j */}
       <div className="card animate-fade-up delay-3" style={{ padding: '18px 16px', marginBottom: 12 }}>
         <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#9090b0', marginBottom: 14 }}>
-          HEATMAP — 90J
+          🗺️ HEATMAP — 90J
         </p>
         {months.map(({ label, days: mDays }) => (
           <div key={label} style={{ marginBottom: 12 }}>
@@ -229,13 +231,13 @@ export default function DashboardView({ space }) {
       {/* Top / Bottom */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginBottom: 12 }}>
         <div className="card animate-fade-up delay-3" style={{ padding: '16px' }}>
-          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: SEC, marginBottom: 12 }}>▲ TOP</p>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: SEC, marginBottom: 12 }}>🏆 TOP</p>
           {top3.length === 0
             ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
             : top3.map((h, i) => (
               <div key={h.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6 }}>
                 <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#4a4a6e', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {i + 1}. {h.name}
+                  {['🥇','🥈','🥉'][i]} {h.name}
                 </span>
                 <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: SEC, flexShrink: 0 }}>{h.pct}%</span>
               </div>
@@ -243,7 +245,7 @@ export default function DashboardView({ space }) {
           }
         </div>
         <div className="card animate-fade-up delay-4" style={{ padding: '16px' }}>
-          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#FC5252', marginBottom: 12 }}>▼ A AMELIORER</p>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#FC5252', marginBottom: 12 }}>💪 A AMELIORER</p>
           {bottom3.length === 0
             ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
             : bottom3.map((h, i) => (
@@ -260,7 +262,7 @@ export default function DashboardView({ space }) {
 
       {/* Par catégorie */}
       <div className="card animate-fade-up delay-4" style={{ padding: '16px', marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0', marginBottom: 14 }}>PAR CATEGORIE — 30J</p>
+        <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0', marginBottom: 14 }}>🗂️ PAR CATEGORIE — 30J</p>
         {catStats.length === 0
           ? <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#9090b0' }}>PAS DE DONNEES</p>
           : catStats.map(({ category, pct }) => (

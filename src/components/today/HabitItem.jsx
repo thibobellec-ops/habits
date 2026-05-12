@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react';
 
+const GREEN    = '#5AC54F';
+const GREEN_DK = '#2D7B23';
+
 // 8 particules en étoile — couleurs Mario/NES flashy
 const PARTICLES = [
   { dx:  0, dy: -28, color: '#F8D000', delay: 0   },
   { dx: 20, dy: -20, color: '#FC5252', delay: 20  },
-  { dx: 28, dy:   0, color: '#5AC54F', delay: 0   },
+  { dx: 28, dy:   0, color: GREEN,     delay: 0   },
   { dx: 20, dy:  20, color: '#3CBCFC', delay: 20  },
   { dx:  0, dy:  28, color: '#F8D000', delay: 0   },
   { dx:-20, dy:  20, color: '#FC9838', delay: 20  },
@@ -12,7 +15,7 @@ const PARTICLES = [
   { dx:-20, dy: -20, color: '#FC5252', delay: 20  },
 ];
 
-export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000' }) {
+export default function HabitItem({ habit, checked, onToggle }) {
   const [animating, setAnimating] = useState(false);
   const isNeg = habit.type === 'negative';
 
@@ -26,8 +29,8 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000'
 
   let borderColor, bgColor, symbol, textColor;
   if (checked) {
-    borderColor = accent;
-    bgColor     = `${accent}22`;
+    borderColor = GREEN;
+    bgColor     = 'rgba(90,197,79,0.15)';
     symbol      = '✓';
     textColor   = '#1a1a2e';
   } else if (isNeg) {
@@ -54,7 +57,7 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000'
       onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
-      {/* Checkbox pixel art */}
+      {/* Checkbox pixel art — toujours verte */}
       <div
         className={animating && checked ? 'check-pop' : ''}
         style={{
@@ -64,8 +67,8 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000'
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: "'Press Start 2P', monospace",
           fontSize: 9,
-          color: checked ? accent : '#FC5252',
-          boxShadow: checked ? `2px 2px 0 ${accent}66` : '2px 2px 0 #0002',
+          color: checked ? GREEN : '#FC5252',
+          boxShadow: checked ? `2px 2px 0 ${GREEN_DK}66` : '2px 2px 0 #0002',
           imageRendering: 'pixelated',
           transition: 'all 0.15s',
         }}
@@ -106,12 +109,12 @@ export default function HabitItem({ habit, checked, onToggle, accent = '#F8D000'
         <span style={{
           fontSize: 5, fontFamily: "'Press Start 2P', monospace",
           padding: '2px 5px',
-          border: `1px solid ${checked ? accent : '#FC5252'}`,
-          color: checked ? accent : '#FC5252',
-          background: checked ? `${accent}11` : 'rgba(252,82,82,0.08)',
+          border: `1px solid ${checked ? GREEN : '#FC5252'}`,
+          color: checked ? GREEN : '#FC5252',
+          background: checked ? 'rgba(90,197,79,0.1)' : 'rgba(252,82,82,0.08)',
           whiteSpace: 'nowrap', flexShrink: 0,
         }}>
-          {checked ? 'OK' : 'EVITER'}
+          {checked ? '✓ OK' : '⚠ EVITER'}
         </span>
       )}
     </div>
