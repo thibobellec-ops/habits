@@ -240,7 +240,8 @@ export function AppProvider({ children }) {
           break;
       }
     } catch (err) {
-      console.error('Erreur sync Supabase:', err);
+      console.error('Erreur sync Supabase:', err?.message || err);
+      alert(`Erreur sync: ${err?.message || JSON.stringify(err)}`);
     }
   }, [user, store]);
 

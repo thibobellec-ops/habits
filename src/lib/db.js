@@ -62,7 +62,7 @@ export async function seedDefaultHabits(userId) {
 }
 
 export async function upsertHabit(userId, space, habit) {
-  return supabase.from('habits').upsert({
+  const { error } = await supabase.from('habits').upsert({
     id: habit.id,
     user_id: userId,
     space,
@@ -72,6 +72,7 @@ export async function upsertHabit(userId, space, habit) {
     archived: habit.archived,
     order: habit.order,
   }, { onConflict: 'id' });
+  if (error) throw error;
 }
 
 // ─── Checkins ────────────────────────────────────────────────────────────────
@@ -102,11 +103,12 @@ export async function fetchCheckins(userId) {
 }
 
 export async function toggleCheckin(userId, space, habitId, date, value) {
-  return supabase.from('checkins').upsert({
+  const { error } = await supabase.from('checkins').upsert({
     user_id: userId,
     habit_id: habitId,
     space,
     date,
     done: value,
   }, { onConflict: 'user_id,habit_id,date' });
+  if (error) throw error;
 }
