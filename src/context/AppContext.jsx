@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useReducer, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useReducer, useState, useCallback, useRef } from 'react';
 import {
   fetchHabits, fetchCheckins, seedDefaultHabits,
   upsertHabit, toggleCheckin, onAuthChange, getUser,
 } from '../lib/db';
+import { supabase } from '../lib/supabase';
 import { getTodayKey } from '../data/storage';
 import { DEFAULT_HABITS } from '../data/defaultHabits';
 
@@ -55,6 +56,39 @@ function reducer(state, action) {
         habits: {
           ...state.habits,
           [space]: state.habits[space].map(h => h.id === habit.id ? habit : h),
+        },
+      };
+    }
+
+    case 'REALTIME_CHECKIN': {
+      // Mise à jour d'un checkin reçu depuis Supabase Realtime
+      const { habit_id, date, space, done } = action.payload;
+      return {
+        ...state,
+        checkins: {
+          ...state.checkins,
+          [date]: {
+            ...state.checkins[date],
+            [space]: {
+              ...state.checkins[date]?.[space],
+              [habit_id]: done,
+            },
+          },
+        },
+      };
+    }
+
+    case 'REALTIME_HABIT': {
+      // Mise à jour d'une habitude reçue depuis Supabase Realtime
+      const { habit, space } = action.payload;
+      const exists = state.habits[space]?.some(h => h.id === habit.id);
+      return {
+        ...state,
+        habits: {
+          ...state.habits,
+          [space]: exists
+            ? state.habits[space].map(h => h.id === habit.id ? habit : h)
+            : [...state.habits[space], habit],
         },
       };
     }
@@ -124,6 +158,52 @@ export function AppProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, [loadUserData]);
+
+  // ── Supabase Realtime — sync instantané entre appareils ─────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`realtime-${user.id}`)
+
+      // Checkins : coche/décoche sur un autre appareil
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'checkins',
+        filter: `user_id=eq.${user.id}`,
+      }, ({ new: row }) => {
+        if (!row) return;
+        rawDispatch({
+          type: 'REALTIME_CHECKIN',
+          payload: { habit_id: row.habit_id, date: row.date, space: row.space, done: row.done },
+        });
+      })
+
+      // Habits : ajout/modif d'habitude sur un autre appareil
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'habits',
+        filter: `user_id=eq.${user.id}`,
+      }, ({ new: row }) => {
+        if (!row) return;
+        rawDispatch({
+          type: 'REALTIME_HABIT',
+          payload: {
+            space: row.space,
+            habit: {
+              id: row.id, name: row.name, category: row.category,
+              type: row.type, archived: row.archived, order: row.order,
+            },
+          },
+        });
+      })
+
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user]);
 
   // ── Dispatch wrappé : optimistic UI + sync Supabase ─────────────────────
   const dispatch = useCallback(async (action) => {
