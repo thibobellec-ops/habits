@@ -7,11 +7,12 @@ import { DEFAULT_HABITS } from '../data/defaultHabits';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
-export async function sendMagicLink(email) {
-  return supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin },
-  });
+export async function signUp(email, password) {
+  return supabase.auth.signUp({ email, password });
+}
+
+export async function signIn(email, password) {
+  return supabase.auth.signInWithPassword({ email, password });
 }
 
 export async function signOut() {
