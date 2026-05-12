@@ -1,10 +1,9 @@
-import { createContext, useContext, useEffect, useReducer, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useReducer, useState, useCallback } from 'react';
 import {
   fetchHabits, fetchCheckins, seedDefaultHabits,
   upsertHabit, toggleCheckin, onAuthChange, getUser,
 } from '../lib/db';
 import { supabase } from '../lib/supabase';
-import { getTodayKey } from '../data/storage';
 import { DEFAULT_HABITS } from '../data/defaultHabits';
 
 const AppContext = createContext(null);
@@ -171,9 +170,9 @@ export function AppProvider({ children }) {
         event: '*',
         schema: 'public',
         table: 'checkins',
-        filter: `user_id=eq.${user.id}`,
       }, ({ new: row }) => {
-        if (!row) return;
+        // Filtre côté client pour ne traiter que ses propres données
+        if (!row || row.user_id !== user.id) return;
         rawDispatch({
           type: 'REALTIME_CHECKIN',
           payload: { habit_id: row.habit_id, date: row.date, space: row.space, done: row.done },
@@ -185,9 +184,8 @@ export function AppProvider({ children }) {
         event: '*',
         schema: 'public',
         table: 'habits',
-        filter: `user_id=eq.${user.id}`,
       }, ({ new: row }) => {
-        if (!row) return;
+        if (!row || row.user_id !== user.id) return;
         rawDispatch({
           type: 'REALTIME_HABIT',
           payload: {
@@ -200,10 +198,22 @@ export function AppProvider({ children }) {
         });
       })
 
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime status:', status);
+      });
 
     return () => supabase.removeChannel(channel);
   }, [user]);
+
+  // ── Rechargement quand l'onglet redevient visible (fallback) ────────────
+  useEffect(() => {
+    if (!user) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadUserData(user);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [user, loadUserData]);
 
   // ── Dispatch wrappé : optimistic UI + sync Supabase ─────────────────────
   const dispatch = useCallback(async (action) => {
